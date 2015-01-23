@@ -12,7 +12,7 @@ enum FilterType {
     case None
 }
 
-class QueryOptions {
+public class QueryOptions {
     // A filter string to apploy to the query
     var filter: String = ""
 
