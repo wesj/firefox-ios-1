@@ -9,7 +9,7 @@ public class Visit {
     // TODO: Store other info about the visit. i.e. Previous visit, reason for visit
     //       (clicking link, typing url, search), device, etc.
 
-    init(site: Site, date: NSDate) {
+    public init(site: Site, date: NSDate) {
         self.guid = NSUUID().UUIDString
         self.site = site
         self.date = date

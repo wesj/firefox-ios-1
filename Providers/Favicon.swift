@@ -8,24 +8,29 @@ import UIKit
 
 import Storage
 
-class Favicon {
-    var url: String
-    var image: UIImage?
-    var updatedDate: NSDate
-    var sites: NSSet
+public class Favicon {
+    public var guid: String?
+    public var url: String
+    public var updatedDate: NSDate
+    public var image: UIImage?
 
-    init(url: String, image: UIImage?, updatedDate: NSDate, sites: NSSet) {
+    public init(url: String, image: UIImage?, date: NSDate? = nil) {
         self.url = url
-        self.image = image
         self.updatedDate = NSDate()
-        self.sites = NSSet()
+        self.image = image
+
+        if let date = date {
+            self.updatedDate = date
+        } else {
+            self.updatedDate = NSDate()
+        }
     }
 }
 
 extension Favicon {
-    func addSite(site: Site) {
+    public func addSite(site: Site, callback: (success: Boolean) -> Void) {
     }
 
-    func removeSite(site: Site) {
+    public func removeSite(site: Site, callback: (success: Boolean) -> Void) {
     }
 }

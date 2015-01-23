@@ -11,6 +11,18 @@
 		0B4D58851A72EC6A00718948 /* JoinedHistoryVisitsTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4D58831A72EC6A00718948 /* JoinedHistoryVisitsTable.swift */; };
 		0B4D58861A72EC6A00718948 /* VisitsTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4D58841A72EC6A00718948 /* VisitsTable.swift */; };
 		0B4D58881A72ECC200718948 /* Visit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4D58871A72ECC200718948 /* Visit.swift */; };
+		0B4D58921A72EEAD00718948 /* FaviconsTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4D58911A72EEAD00718948 /* FaviconsTable.swift */; };
+		0B4D58941A72EEC500718948 /* Favicon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4D58931A72EEC500718948 /* Favicon.swift */; };
+		0B4D589B1A72F14C00718948 /* TestHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4D589A1A72F14C00718948 /* TestHistory.swift */; };
+		0B4D589F1A72F15900718948 /* TestVisitsTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4D589C1A72F15900718948 /* TestVisitsTable.swift */; };
+		0B4D58A01A72F15900718948 /* TestJoinedHistoryVisits.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4D589D1A72F15900718948 /* TestJoinedHistoryVisits.swift */; };
+		0B4D58A11A72F15900718948 /* TestHistoryTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4D589E1A72F15900718948 /* TestHistoryTable.swift */; };
+		0B4D58A21A72F17C00718948 /* Visit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4D58871A72ECC200718948 /* Visit.swift */; };
+		0B4D58A31A72F19800718948 /* JoinedHistoryVisitsTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4D58831A72EC6A00718948 /* JoinedHistoryVisitsTable.swift */; };
+		0B4D58A41A72F19B00718948 /* VisitsTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4D58841A72EC6A00718948 /* VisitsTable.swift */; };
+		0BCFBB9C1A76C1D30087E26D /* Favicons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BCFBB9B1A76C1D30087E26D /* Favicons.swift */; };
+		0BCFBB9E1A76C20A0087E26D /* SQLiteFavicons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BCFBB9D1A76C20A0087E26D /* SQLiteFavicons.swift */; };
+		0BCFBBA01A76D3330087E26D /* FaviconSiteTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BCFBB9F1A76D3330087E26D /* FaviconSiteTable.swift */; };
 		282DA49B1A699E0300A406E2 /* Storage.h in Headers */ = {isa = PBXBuildFile; fileRef = 282DA49A1A699E0300A406E2 /* Storage.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		282DA4A11A699E0300A406E2 /* Storage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 282DA4951A699E0300A406E2 /* Storage.framework */; };
 		282DA4A81A699E0300A406E2 /* StorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 282DA4A71A699E0300A406E2 /* StorageTests.swift */; };
@@ -51,6 +63,15 @@
 		0B4D58831A72EC6A00718948 /* JoinedHistoryVisitsTable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = JoinedHistoryVisitsTable.swift; path = ../../Client/DataAccess/SQL/JoinedHistoryVisitsTable.swift; sourceTree = "<group>"; };
 		0B4D58841A72EC6A00718948 /* VisitsTable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = VisitsTable.swift; path = ../../Client/DataAccess/SQL/VisitsTable.swift; sourceTree = "<group>"; };
 		0B4D58871A72ECC200718948 /* Visit.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Visit.swift; path = ../../Providers/Visit.swift; sourceTree = "<group>"; };
+		0B4D58911A72EEAD00718948 /* FaviconsTable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = FaviconsTable.swift; path = ../../Client/DataAccess/SQL/FaviconsTable.swift; sourceTree = "<group>"; };
+		0B4D58931A72EEC500718948 /* Favicon.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Favicon.swift; path = ../../Providers/Favicon.swift; sourceTree = "<group>"; };
+		0B4D589A1A72F14C00718948 /* TestHistory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TestHistory.swift; path = ../../ClientTests/TestHistory.swift; sourceTree = "<group>"; };
+		0B4D589C1A72F15900718948 /* TestVisitsTable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TestVisitsTable.swift; path = ../../ClientTests/TestVisitsTable.swift; sourceTree = "<group>"; };
+		0B4D589D1A72F15900718948 /* TestJoinedHistoryVisits.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TestJoinedHistoryVisits.swift; path = ../../ClientTests/TestJoinedHistoryVisits.swift; sourceTree = "<group>"; };
+		0B4D589E1A72F15900718948 /* TestHistoryTable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TestHistoryTable.swift; path = ../../ClientTests/TestHistoryTable.swift; sourceTree = "<group>"; };
+		0BCFBB9B1A76C1D30087E26D /* Favicons.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Favicons.swift; sourceTree = "<group>"; };
+		0BCFBB9D1A76C20A0087E26D /* SQLiteFavicons.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SQLiteFavicons.swift; sourceTree = "<group>"; };
+		0BCFBB9F1A76D3330087E26D /* FaviconSiteTable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FaviconSiteTable.swift; sourceTree = "<group>"; };
 		282DA4951A699E0300A406E2 /* Storage.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Storage.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		282DA4991A699E0300A406E2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		282DA49A1A699E0300A406E2 /* Storage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Storage.h; sourceTree = "<group>"; };
@@ -114,6 +135,7 @@
 		282DA4971A699E0300A406E2 /* Storage */ = {
 			isa = PBXGroup;
 			children = (
+				0B4D58931A72EEC500718948 /* Favicon.swift */,
 				0B4D58871A72ECC200718948 /* Visit.swift */,
 				282DA4D91A69A2C400A406E2 /* SQL */,
 				282DA4D01A69A14500A406E2 /* FileAccessor.swift */,
@@ -122,6 +144,7 @@
 				282DA4C01A699EF200A406E2 /* Cursor.swift */,
 				282DA49A1A699E0300A406E2 /* Storage.h */,
 				282DA4981A699E0300A406E2 /* Supporting Files */,
+				0BCFBB9B1A76C1D30087E26D /* Favicons.swift */,
 			);
 			path = Storage;
 			sourceTree = "<group>";
@@ -137,6 +160,10 @@
 		282DA4A41A699E0300A406E2 /* StorageTests */ = {
 			isa = PBXGroup;
 			children = (
+				0B4D589C1A72F15900718948 /* TestVisitsTable.swift */,
+				0B4D589D1A72F15900718948 /* TestJoinedHistoryVisits.swift */,
+				0B4D589E1A72F15900718948 /* TestHistoryTable.swift */,
+				0B4D589A1A72F14C00718948 /* TestHistory.swift */,
 				282DA4A71A699E0300A406E2 /* StorageTests.swift */,
 				282DA4A51A699E0300A406E2 /* Supporting Files */,
 			);
@@ -162,12 +189,15 @@
 		282DA4D91A69A2C400A406E2 /* SQL */ = {
 			isa = PBXGroup;
 			children = (
+				0B4D58911A72EEAD00718948 /* FaviconsTable.swift */,
 				0B4D58831A72EC6A00718948 /* JoinedHistoryVisitsTable.swift */,
 				0B4D58841A72EC6A00718948 /* VisitsTable.swift */,
 				0B4D58811A72EB9300718948 /* GenericTable.swift */,
 				282DA4CB1A69A0BB00A406E2 /* HistoryTable.swift */,
 				282DA4CA1A69A0BB00A406E2 /* SQLiteHistory.swift */,
 				282DA4C71A699FD900A406E2 /* BrowserDB.swift */,
+				0BCFBB9D1A76C20A0087E26D /* SQLiteFavicons.swift */,
+				0BCFBB9F1A76D3330087E26D /* FaviconSiteTable.swift */,
 			);
 			name = SQL;
 			sourceTree = "<group>";
@@ -288,6 +318,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				282DA4C11A699EF200A406E2 /* Cursor.swift in Sources */,
+				0B4D58921A72EEAD00718948 /* FaviconsTable.swift in Sources */,
+				0BCFBB9C1A76C1D30087E26D /* Favicons.swift in Sources */,
 				0B4D58881A72ECC200718948 /* Visit.swift in Sources */,
 				282DA4C51A699F8A00A406E2 /* SwiftData.swift in Sources */,
 				282DA5211A69BCB700A406E2 /* module.modulemap in Sources */,
@@ -295,6 +327,9 @@
 				282DA4D41A69A24300A406E2 /* History.swift in Sources */,
 				282DA4CE1A69A0BB00A406E2 /* HistoryTable.swift in Sources */,
 				0B4D58861A72EC6A00718948 /* VisitsTable.swift in Sources */,
+				0BCFBBA01A76D3330087E26D /* FaviconSiteTable.swift in Sources */,
+				0BCFBB9E1A76C20A0087E26D /* SQLiteFavicons.swift in Sources */,
+				0B4D58941A72EEC500718948 /* Favicon.swift in Sources */,
 				282DA4CC1A69A0BB00A406E2 /* SQLiteHistory.swift in Sources */,
 				0B4D58851A72EC6A00718948 /* JoinedHistoryVisitsTable.swift in Sources */,
 				282DA4D11A69A14500A406E2 /* FileAccessor.swift in Sources */,
@@ -308,14 +343,21 @@
 			buildActionMask = 2147483647;
 			files = (
 				282DA5221A69BCB700A406E2 /* module.modulemap in Sources */,
+				0B4D58A41A72F19B00718948 /* VisitsTable.swift in Sources */,
+				0B4D58A11A72F15900718948 /* TestHistoryTable.swift in Sources */,
 				282DA4D21A69A14500A406E2 /* FileAccessor.swift in Sources */,
 				282DA4C91A699FD900A406E2 /* BrowserDB.swift in Sources */,
 				282DA4D51A69A24300A406E2 /* History.swift in Sources */,
 				282DA4CF1A69A0BB00A406E2 /* HistoryTable.swift in Sources */,
 				282DA4D81A69A28000A406E2 /* Site.swift in Sources */,
+				0B4D589B1A72F14C00718948 /* TestHistory.swift in Sources */,
+				0B4D58A21A72F17C00718948 /* Visit.swift in Sources */,
 				282DA4A81A699E0300A406E2 /* StorageTests.swift in Sources */,
+				0B4D58A01A72F15900718948 /* TestJoinedHistoryVisits.swift in Sources */,
 				282DA4C61A699F8A00A406E2 /* SwiftData.swift in Sources */,
 				282DA4CD1A69A0BB00A406E2 /* SQLiteHistory.swift in Sources */,
+				0B4D589F1A72F15900718948 /* TestVisitsTable.swift in Sources */,
+				0B4D58A31A72F19800718948 /* JoinedHistoryVisitsTable.swift in Sources */,
 				282DA4C21A699EF200A406E2 /* Cursor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

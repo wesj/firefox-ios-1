@@ -34,7 +34,7 @@ public struct BookmarkRoots {
  */
 public class BookmarkItem: BookmarkNode {
     public let id: String
-    public let url: String
+    public let url: String!
     public let title: String
 
     var _icon: UIImage?
@@ -42,7 +42,7 @@ public class BookmarkItem: BookmarkNode {
         if (self._icon != nil) {
             return self._icon!
         }
-        return createSizedFavicon(UIImage(named: "leaf.png")!)
+        return UIImage(named: "leaf.png")!
     }
 
     init(id: String, title: String, url: String) {
@@ -84,7 +84,7 @@ public class MemoryBookmarkFolder: BookmarkFolder, SequenceType {
     }
 
     public var icon: UIImage {
-        return createSizedFavicon(UIImage(named: "bookmark_folder_closed.png")!)
+        return UIImage(named: "bookmark_folder_closed.png")! // createSizedFavicon(UIImage(named: "bookmark_folder_closed.png")!)
     }
 
     init(id: String, name: String, children: [BookmarkNode]) {

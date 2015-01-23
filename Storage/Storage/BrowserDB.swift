@@ -4,23 +4,29 @@
 
 import Foundation
 
-enum QuerySort {
+public enum QuerySort {
     case None, LastVisit, Frecency
 }
 
-enum FilterType {
+public enum FilterType {
     case None
 }
 
 public class QueryOptions {
     // A filter string to apploy to the query
-    var filter: String? = nil
+    public var filter: String? = nil
 
     // Allows for customizing how the filter is applied (i.e. only urls or urls and titles?)
-    var filterType: FilterType = .None
+    public var filterType: FilterType = .None
 
     // The way to sort the query
-    var sort: QuerySort = .None
+    public var sort: QuerySort = .None
+
+    public init(filter: String? = nil, filterType: FilterType = .None, sort: QuerySort = .None) {
+        self.filter = filter
+        self.filterType = filterType
+        self.sort = sort
+    }
 }
 
 /* A table in our database. Note this doesn't have to be a real table. It might be backed by a join or something else interesting. */
@@ -38,13 +44,16 @@ protocol Table {
 let DBCouldNotOpenErrorCode = 200
 
 /* This is a base interface into our browser db. It holds arrays of tables and handles basic creation/updating of them. */
+// Version 1 - Basic history table
+// Version 2 - Added a visits table, refactored the history table to be a GenericTable
+// Version 3 - Added a favicons table
 class BrowserDB {
     private let db: SwiftData
     // XXX: Increasing this should blow away old history, since we currently dont' support any upgrades
-    private let Version: Int = 2
+    private let Version: Int = 3
     private let FileName = "browser.db"
     private let tables: [String: Table] = [
-        HistoryVisits: JoinedHistoryVisitsTable()
+        HistoryVisits: JoinedHistoryVisitsTable(),
     ]
 
     private func exists(db: SQLiteDBConnection, table: Table) -> Bool {
@@ -55,6 +64,8 @@ class BrowserDB {
     }
 
     init?(files: FileAccessor) {
+        tables[TableNameFaviconSites] = FaviconSiteTable(files: files)
+
         db = SwiftData(filename: files.get(FileName)!)
         if !createDB(files) {
             if !deleteAndRecreate(files) {
