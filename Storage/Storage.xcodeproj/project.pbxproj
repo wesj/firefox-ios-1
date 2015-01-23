@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0B4D58821A72EB9300718948 /* GenericTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4D58811A72EB9300718948 /* GenericTable.swift */; };
 		282DA49B1A699E0300A406E2 /* Storage.h in Headers */ = {isa = PBXBuildFile; fileRef = 282DA49A1A699E0300A406E2 /* Storage.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		282DA4A11A699E0300A406E2 /* Storage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 282DA4951A699E0300A406E2 /* Storage.framework */; };
 		282DA4A81A699E0300A406E2 /* StorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 282DA4A71A699E0300A406E2 /* StorageTests.swift */; };
@@ -43,6 +44,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0B4D58811A72EB9300718948 /* GenericTable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = GenericTable.swift; path = ../../Client/DataAccess/SQL/GenericTable.swift; sourceTree = "<group>"; };
 		282DA4951A699E0300A406E2 /* Storage.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Storage.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		282DA4991A699E0300A406E2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		282DA49A1A699E0300A406E2 /* Storage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Storage.h; sourceTree = "<group>"; };
@@ -153,6 +155,7 @@
 		282DA4D91A69A2C400A406E2 /* SQL */ = {
 			isa = PBXGroup;
 			children = (
+				0B4D58811A72EB9300718948 /* GenericTable.swift */,
 				282DA4CB1A69A0BB00A406E2 /* HistoryTable.swift */,
 				282DA4CA1A69A0BB00A406E2 /* SQLiteHistory.swift */,
 				282DA4C71A699FD900A406E2 /* BrowserDB.swift */,
@@ -283,6 +286,7 @@
 				282DA4CE1A69A0BB00A406E2 /* HistoryTable.swift in Sources */,
 				282DA4CC1A69A0BB00A406E2 /* SQLiteHistory.swift in Sources */,
 				282DA4D11A69A14500A406E2 /* FileAccessor.swift in Sources */,
+				0B4D58821A72EB9300718948 /* GenericTable.swift in Sources */,
 				282DA4C81A699FD900A406E2 /* BrowserDB.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

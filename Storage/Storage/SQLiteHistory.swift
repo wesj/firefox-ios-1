@@ -16,7 +16,7 @@ public class SQLiteHistory : History {
         self.db = BrowserDB(files: files)!
     }
 
-    public func clear(filter: String?, options: HistoryOptions?, complete: (success: Bool) -> Void) {
+    public func clear(filter: String?, options: QueryOptions?, complete: (success: Bool) -> Void) {
         let s: Site? = nil
         var err: NSError? = nil
         db.delete(TableNameHistory, item: s, err: &err)
@@ -27,14 +27,14 @@ public class SQLiteHistory : History {
         }
     }
 
-    public func get(filter: String?, options: HistoryOptions?, complete: (data: Cursor) -> Void) {
+    public func get(filter: String?, options: QueryOptions?, complete: (data: Cursor) -> Void) {
         let res = db.query(TableNameHistory)
         dispatch_async(dispatch_get_main_queue()) {
             complete(data: res)
         }
     }
 
-    public func addVisit(site: Site, options: HistoryOptions?, complete: (success: Bool) -> Void) {
+    public func addVisit(site: Site, options: QueryOptions?, complete: (success: Bool) -> Void) {
         var err: NSError? = nil
         db.insert(TableNameHistory, item: site, err: &err)
         // TODO: Track visits in a separate table
