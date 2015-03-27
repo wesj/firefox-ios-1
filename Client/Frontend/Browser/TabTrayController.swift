@@ -9,7 +9,7 @@ private struct TabTrayControllerUX {
     static let CornerRadius = CGFloat(4.0)
     static let BackgroundColor = UIColor(red: 0.21, green: 0.23, blue: 0.25, alpha: 1)
     static let TextBoxHeight = CGFloat(32.0)
-    static let CellHeight = TextBoxHeight * 5
+    static let CellHeight = TextBoxHeight * 8
     static let Margin = CGFloat(15)
     // This color has been manually adjusted to match background layer with iOS translucency effect.
     static let ToolbarBarTintColor = UIColor(red: 0.35, green: 0.37, blue: 0.39, alpha: 0)
@@ -17,8 +17,8 @@ private struct TabTrayControllerUX {
     static let TabTitleTextFont = UIFont(name: "HelveticaNeue-Bold", size: 11)
 }
 
-// UITableViewController doesn't let us specify a style for recycling views. We override the default style here.
-private class CustomCell: UITableViewCell {
+// UIcollectionViewController doesn't let us specify a style for recycling views. We override the default style here.
+private class CustomCell: UICollectionViewCell {
     let backgroundHolder: UIView
     let background: UIImageViewAligned
     let titleText: UILabel
@@ -27,9 +27,10 @@ private class CustomCell: UITableViewCell {
     let favicon: UIImageView
 
     // Changes depending on whether we're full-screen or not.
-    var margin = TabTrayControllerUX.Margin
+    var margin = CGFloat(0)
 
-    override init(style: UITableViewCellStyle, reuseIdentifier: String?) {
+    override init(frame: CGRect) {
+
         self.backgroundHolder = UIView()
         self.backgroundHolder.layer.shadowColor = UIColor.blackColor().CGColor
         self.backgroundHolder.layer.shadowOffset = CGSizeMake(0, 2.0)
@@ -65,7 +66,8 @@ private class CustomCell: UITableViewCell {
         self.innerStroke = InnerStrokedView(frame: self.backgroundHolder.frame)
         self.innerStroke.layer.backgroundColor = UIColor.clearColor().CGColor
 
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        super.init(frame: frame)
+
         backgroundHolder.addSubview(self.background)
         addSubview(backgroundHolder)
         backgroundHolder.addSubview(self.title)
@@ -73,8 +75,8 @@ private class CustomCell: UITableViewCell {
 
         backgroundColor = UIColor.clearColor()
 
-        selectionStyle = .None
         self.titleText.addObserver(self, forKeyPath: "contentSize", options: .New, context: nil)
+
     }
 
     required init(coder aDecoder: NSCoder) {
@@ -96,7 +98,7 @@ private class CustomCell: UITableViewCell {
         text.frame.origin = CGPoint(x: text.frame.origin.x, y: top)
     }
 
-    func showFullscreen(container: UIView, table: UITableView) {
+    func showFullscreen(container: UIView, table: UICollectionView) {
         margin = 0
         container.insertSubview(self, atIndex: container.subviews.count)
         frame = CGRect(x: container.frame.origin.x,
@@ -107,12 +109,12 @@ private class CustomCell: UITableViewCell {
         setNeedsLayout()
     }
 
-    func showAt(offsetY: Int, container: UIView, table: UITableView) {
+    func showAt(offsetY: Int, container: UIView, table: UICollectionView) {
         margin = TabTrayControllerUX.Margin
         container.insertSubview(self, atIndex: container.subviews.count)
-        frame = CGRect(x: 0,
-            y: ToolbarHeight + StatusBarHeight + CGFloat(offsetY) * TabTrayControllerUX.CellHeight,
-            width: container.frame.width,
+        frame = CGRect(x: self.frame.origin.x,
+            y: self.frame.origin.y,
+            width: container.frame.width / 2 - TabTrayControllerUX.Margin * 1.5,
             height: TabTrayControllerUX.CellHeight)
         title.alpha = 1
         setNeedsLayout()
@@ -121,8 +123,8 @@ private class CustomCell: UITableViewCell {
     override func layoutSubviews() {
         super.layoutSubviews()
 
-        let w = frame.width - 2 * margin
-        let h = frame.height - 2 * margin
+        let w = frame.width
+        let h = frame.height
 
         backgroundHolder.frame = CGRect(x: margin,
             y: margin,
@@ -149,10 +151,10 @@ private class CustomCell: UITableViewCell {
     }
 }
 
-class TabTrayController: UIViewController, UITabBarDelegate, UITableViewDelegate, UITableViewDataSource {
+class TabTrayController: UIViewController, UITabBarDelegate, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     var tabManager: TabManager!
     private let CellIdentifier = "CellIdentifier"
-    var tableView: UITableView!
+    var collectionView: UICollectionView!
     var profile: Profile!
     var screenshotHelper: ScreenshotHelper!
 
@@ -184,15 +186,15 @@ class TabTrayController: UIViewController, UITabBarDelegate, UITableViewDelegate
         let spacer = UIBarButtonItem(barButtonSystemItem: .FlexibleSpace, target: nil, action: nil)
         toolbar.setItems([settingsItem, spacer, signinItem, spacer, addTabItem], animated: true)
 
-        tableView = UITableView()
-        tableView.dataSource = self
-        tableView.delegate = self
-        tableView.separatorStyle = .None
-        tableView.registerClass(CustomCell.self, forCellReuseIdentifier: CellIdentifier)
-        tableView.contentInset = UIEdgeInsets(top: StatusBarHeight + ToolbarHeight, left: 0, bottom: 0, right: 0)
-        tableView.backgroundColor = TabTrayControllerUX.BackgroundColor
+        let flowLayout = UICollectionViewFlowLayout()
+        collectionView = UICollectionView(frame: view.frame, collectionViewLayout: flowLayout)
+        collectionView.dataSource = self
+        collectionView.delegate = self
+        collectionView.registerClass(CustomCell.self, forCellWithReuseIdentifier: CellIdentifier)
+        collectionView.contentInset = UIEdgeInsets(top: StatusBarHeight + ToolbarHeight, left: 0, bottom: 0, right: 0)
+        collectionView.backgroundColor = TabTrayControllerUX.BackgroundColor
 
-        view.addSubview(tableView)
+        view.addSubview(collectionView)
         view.addSubview(toolbar)
 
         toolbar.snp_makeConstraints { make in
@@ -202,7 +204,7 @@ class TabTrayController: UIViewController, UITabBarDelegate, UITableViewDelegate
             return
         }
 
-        tableView.snp_makeConstraints { make in
+        collectionView.snp_makeConstraints { make in
             make.top.equalTo(self.view)
             make.left.right.bottom.equalTo(self.view)
         }
@@ -223,7 +225,7 @@ class TabTrayController: UIViewController, UITabBarDelegate, UITableViewDelegate
         presentingViewController!.dismissViewControllerAnimated(true, completion: nil)
     }
 
-    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
         let tab = tabManager.getTab(indexPath.item)
         tabManager.selectTab(tab)
 
@@ -232,28 +234,31 @@ class TabTrayController: UIViewController, UITabBarDelegate, UITableViewDelegate
         }
     }
 
-    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return tabManager.count
-    }
-
-    func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
-        return TabTrayControllerUX.CellHeight
-    }
-
-    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+    func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
         let tab = tabManager.getTab(indexPath.item)
-        let cell = tableView.dequeueReusableCellWithIdentifier(CellIdentifier) as CustomCell
+        let cell = collectionView.dequeueReusableCellWithReuseIdentifier(CellIdentifier, forIndexPath: indexPath) as CustomCell
         cell.titleText.text = tab.displayTitle
-        let screenshotAspectRatio = tableView.frame.width / TabTrayControllerUX.CellHeight
+        let screenshotAspectRatio = cell.frame.width / TabTrayControllerUX.CellHeight
         cell.background.image = screenshotHelper.takeScreenshot(tab, aspectRatio: screenshotAspectRatio, quality: 1)
         return cell
     }
 
-    func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
-        let tab = tabManager.getTab(indexPath.item)
-        tabManager.removeTab(tab)
-        tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: UITableViewRowAnimation.Automatic)
+    func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return tabManager.count
     }
+
+    func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAtIndex section: Int) -> CGFloat {
+        return TabTrayControllerUX.Margin
+    }
+
+    func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize {
+        return CGSizeMake(collectionView.bounds.width / 2 - TabTrayControllerUX.Margin * 1.5, TabTrayControllerUX.CellHeight)
+    }
+
+    func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAtIndex section: Int) -> UIEdgeInsets {
+        return UIEdgeInsetsMake(TabTrayControllerUX.Margin, TabTrayControllerUX.Margin, TabTrayControllerUX.Margin, TabTrayControllerUX.Margin)
+    }
+
 }
 
 extension TabTrayController: Transitionable {
@@ -262,7 +267,8 @@ extension TabTrayController: Transitionable {
         if let cell = options.moving as? CustomCell {
             transitionCell = cell
         } else {
-            transitionCell = CustomCell(style: UITableViewCellStyle.Default, reuseIdentifier: "id")
+            transitionCell = CustomCell(frame: options.container!.frame)
+//            transitionCell = collectionView.dequeueReusableCellWithReuseIdentifier("id", forIndexPath: NSIndexPath(index: tabManager.selectedIndex)) as CustomCell
             options.moving = transitionCell
         }
 
@@ -282,14 +288,14 @@ extension TabTrayController: Transitionable {
             let cell = getTransitionCell(options, browser: tabManager.selectedTab)
             // TODO: Smoothly animate the corner radius to 0.
             cell.backgroundHolder.layer.cornerRadius = TabTrayControllerUX.CornerRadius
-            cell.showFullscreen(container, table: tableView)
+            cell.showFullscreen(container, table: collectionView)
         }
 
         // Scroll the toolbar off the top
         toolbar.alpha = 0
-        toolbar.transform = CGAffineTransformMakeTranslation(0, -ToolbarHeight)
+//        toolbar.transform = CGAffineTransformMakeTranslation(0, -ToolbarHeight)
 
-        tableView.backgroundColor = UIColor.clearColor()
+        collectionView.backgroundColor = UIColor.clearColor()
     }
 
     func transitionableWillShow(transitionable: Transitionable, options: TransitionOptions) {
@@ -297,14 +303,14 @@ extension TabTrayController: Transitionable {
             // Create a fake cell that is at the selected index
             let cell = getTransitionCell(options, browser: tabManager.selectedTab)
             cell.backgroundHolder.layer.cornerRadius = TabTrayControllerUX.CornerRadius
-            cell.showAt(tabManager.selectedIndex, container: container, table: tableView)
+            cell.showAt(tabManager.selectedIndex, container: container, table: collectionView)
         }
 
         // Scroll the toolbar on from the top
         toolbar.alpha = 1
         toolbar.transform = CGAffineTransformIdentity
 
-        tableView.backgroundColor = TabTrayControllerUX.BackgroundColor
+        collectionView.backgroundColor = TabTrayControllerUX.BackgroundColor
     }
 
     func transitionableWillComplete(transitionable: Transitionable, options: TransitionOptions) {
