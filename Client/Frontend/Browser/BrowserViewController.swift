@@ -33,7 +33,7 @@ class BrowserViewController: UIViewController {
     private var header: UIView!
     private var footer: UIView!
     private var footerBackground: UIView!
-    private var previousScroll: CGPoint? = nil
+    private var gestureRecognizer: MyGestureRecognizer!
 
     required init(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
@@ -46,6 +46,7 @@ class BrowserViewController: UIViewController {
     }
 
     private func didInit() {
+        gestureRecognizer = MyGestureRecognizer(bvc: self)
         let defaultURL = NSURL(string: HomeURL)!
         let defaultRequest = NSURLRequest(URL: defaultURL)
         tabManager = TabManager(defaultNewTabRequest: defaultRequest)
@@ -537,6 +538,38 @@ extension BrowserViewController: SearchViewControllerDelegate {
 }
 
 extension BrowserViewController: UIScrollViewDelegate {
+    func scrollViewDidScrollToTop(scrollView: UIScrollView) {
+        // showToolbars(animated: true)
+    }
+}
+
+class MyGestureRecognizer : UIGestureRecognizer {
+    let bvc: BrowserViewController!
+    var previousScroll: CGPoint?
+
+    init(bvc: BrowserViewController) {
+        super.init()
+        self.bvc = bvc
+    }
+
+    override func canPreventGestureRecognizer(preventedGestureRecognizer: UIGestureRecognizer!) -> Bool {
+        if preventedGestureRecognizer.description.rangeOfString("UIWebTouchEventsGestureRecognizer") != nil {
+            return true
+        }
+        return false
+    }
+
+    override func canBePreventedByGestureRecognizer(preventingGestureRecognizer: UIGestureRecognizer!) -> Bool {
+        if preventingGestureRecognizer.description.rangeOfString("UIWebTouchEventsGestureRecognizer") != nil {
+            return false
+        }
+        return preventingGestureRecognizer.description.rangeOfString("UIScrollViewPanGestureRecognizer") == nil
+    }
+
+    override init(target: AnyObject, action: Selector) {
+        super.init(target: target, action: action)
+    }
+
     private func clamp(y: CGFloat, min: CGFloat, max: CGFloat) -> CGFloat {
         if y >= max {
             return max
@@ -547,81 +580,97 @@ extension BrowserViewController: UIScrollViewDelegate {
     }
 
     private func scrollUrlBar(dy: CGFloat) {
-        let newY = clamp(header.transform.ty + dy, min: -AppConstants.ToolbarHeight, max: 0)
-        header.transform = CGAffineTransformMakeTranslation(0, newY)
+        let newY = clamp(bvc.header.transform.ty + dy, min: -AppConstants.ToolbarHeight, max: 0)
+        bvc.header.transform = CGAffineTransformMakeTranslation(0, newY)
 
         let percent = 1 - newY / -AppConstants.ToolbarHeight
-        urlBar.alpha = percent
-        self.setNeedsStatusBarAppearanceUpdate()
+        bvc.urlBar.alpha = percent
+        self.bvc.setNeedsStatusBarAppearanceUpdate()
     }
 
     private func scrollReaderModeBar(dy: CGFloat) {
-        let newY = clamp(readerModeBar.transform.ty + dy, min: -AppConstants.ToolbarHeight, max: 0)
-        readerModeBar.transform = CGAffineTransformMakeTranslation(0, newY)
+        let newY = clamp(bvc.readerModeBar.transform.ty + dy, min: -AppConstants.ToolbarHeight, max: 0)
+        bvc.readerModeBar.transform = CGAffineTransformMakeTranslation(0, newY)
 
         let percent = 1 - newY / -AppConstants.ToolbarHeight
-        readerModeBar.alpha = percent
+        bvc.readerModeBar.alpha = percent
     }
 
     private func scrollToolbar(dy: CGFloat) {
-        let newY = clamp(footer.transform.ty - dy, min: 0, max: toolbar.frame.height)
-        footer.transform = CGAffineTransformMakeTranslation(0, newY)
+        let newY = clamp(bvc.footer.transform.ty - dy, min: 0, max: bvc.toolbar.frame.height)
+        bvc.footer.transform = CGAffineTransformMakeTranslation(0, newY)
     }
 
-    func scrollViewWillBeginDragging(scrollView: UIScrollView) {
-        previousScroll = scrollView.contentOffset
+    override func canBePreventedByGestureRecognizer(preventingGestureRecognizer: UIGestureRecognizer!) -> Bool {
+        return false
     }
 
-    // Careful! This method can be called multiple times concurrently.
-    func scrollViewDidScroll(scrollView: UIScrollView) {
-        if var prev = previousScroll {
-            if let tab = tabManager.selectedTab {
-                if tab.loading {
-                    return
-                }
-
-                let offset = scrollView.contentOffset
-                var delta = CGPoint(x: prev.x - offset.x, y: prev.y - offset.y)
-                previousScroll = offset
-
-                if let tab = self.tabManager.selectedTab {
-                    let inset = tab.webView.scrollView.contentInset
-                    let newInset = clamp(inset.top + delta.y, min: AppConstants.StatusBarHeight, max: AppConstants.ToolbarHeight + AppConstants.StatusBarHeight)
-
-                    tab.webView.scrollView.contentInset = UIEdgeInsetsMake(newInset, 0, clamp(newInset - AppConstants.StatusBarHeight, min: 0, max: AppConstants.ToolbarHeight), 0)
-                    tab.webView.scrollView.scrollIndicatorInsets = UIEdgeInsetsMake(newInset - AppConstants.StatusBarHeight, 0, clamp(newInset, min: 0, max: AppConstants.ToolbarHeight), 0)
-
-                    // Adjusting the contentInset will change the scroll position of the page.
-                    // We account for that by also adjusting the previousScroll position
-                    delta.y += inset.top - newInset
-                }
-
-                scrollUrlBar(delta.y)
-                scrollReaderModeBar(delta.y)
-                scrollToolbar(delta.y)
-            }
-        }
+    override func canPreventGestureRecognizer(preventedGestureRecognizer: UIGestureRecognizer!) -> Bool {
+        return false
     }
 
-    func scrollViewWillEndDragging(scrollView: UIScrollView,
-            withVelocity velocity: CGPoint,
-            targetContentOffset: UnsafeMutablePointer<CGPoint>) {
-        previousScroll = nil
-        if tabManager.selectedTab?.loading ?? false {
+    override func touchesBegan(touches: NSSet, withEvent event: UIEvent) {
+        println("Begin \(touches.count)")
+        if touches.count > 1 || previousScroll != nil {
             return
         }
 
-        let offset = scrollView.contentOffset
-        // If we're moving up, or the header is half onscreen, hide the toolbars
-        if velocity.y < 0 || self.header.transform.ty > -self.header.frame.height / 2 {
-            showToolbars(animated: true)
-        } else {
-            hideToolbars(animated: true)
+        if let touch = touches.anyObject() as? UITouch {
+        	previousScroll = touch.locationInView(view)
         }
+        super.touchesBegan(touches, withEvent: event)
     }
 
-    func scrollViewDidScrollToTop(scrollView: UIScrollView) {
-        showToolbars(animated: true)
+    override func touchesCancelled(touches: NSSet!, withEvent event: UIEvent!) {
+        println("Cancelled \(touches.count)")
+        super.touchesCancelled(touches, withEvent: event)
+    }
+
+    override func touchesEnded(touches: NSSet, withEvent event: UIEvent) {
+        if previousScroll == nil || touches.count > 1 {
+            return
+        }
+
+        if let touch = touches.anyObject() as? UITouch {
+            previousScroll = nil
+            if bvc.tabManager.selectedTab?.loading ?? false {
+                return
+            }
+
+            let offset = touch.locationInView(bvc.view)
+            // If we're moving up, or the header is half onscreen, hide the toolbars
+            if bvc.header.transform.ty > -bvc.header.frame.height / 2 {
+                showToolbars(animated: true)
+            } else {
+                hideToolbars(animated: true)
+            }
+        }
+        super.touchesEnded(touches, withEvent: event)
+    }
+
+    override func touchesMoved(touches: NSSet, withEvent event: UIEvent) {
+        // println("Moved \(touches.count)")
+        if previousScroll == nil || touches.count > 1 {
+            return
+        }
+
+        if let touch = touches.anyObject() as? UITouch {
+            let offset = touch.locationInView(bvc.view)
+            var delta = CGPoint(x: offset.x - previousScroll!.x, y: offset.y - previousScroll!.y)
+            if let tab = bvc.tabManager.selectedTab {
+                let inset = tab.webView.scrollView.contentInset
+                let newInset = clamp(inset.top + delta.y, min: AppConstants.StatusBarHeight, max: AppConstants.ToolbarHeight + AppConstants.StatusBarHeight)
+
+                tab.webView.scrollView.contentInset = UIEdgeInsetsMake(newInset, 0, clamp(newInset - AppConstants.StatusBarHeight, min: 0, max: AppConstants.ToolbarHeight), 0)
+                tab.webView.scrollView.scrollIndicatorInsets = UIEdgeInsetsMake(newInset - AppConstants.StatusBarHeight, 0, clamp(newInset, min: 0, max: AppConstants.ToolbarHeight), 0)
+            }
+
+            scrollUrlBar(delta.y)
+            scrollReaderModeBar(delta.y)
+            scrollToolbar(delta.y)
+            previousScroll = offset
+        }
+        super.touchesMoved(touches, withEvent: event)
     }
 
     private func hideToolbars(#animated: Bool, completion: ((finished: Bool) -> Void)? = nil) {
@@ -629,14 +678,14 @@ extension BrowserViewController: UIScrollViewDelegate {
             self.scrollUrlBar(CGFloat(-1*MAXFLOAT))
             self.scrollToolbar(CGFloat(-1*MAXFLOAT))
 
-            self.header.transform = CGAffineTransformMakeTranslation(0, -self.urlBar.frame.height + AppConstants.StatusBarHeight)
-            self.footer.transform = CGAffineTransformMakeTranslation(0, self.toolbar.frame.height)
+            self.bvc.header.transform = CGAffineTransformMakeTranslation(0, -self.bvc.urlBar.frame.height + AppConstants.StatusBarHeight)
+            self.bvc.footer.transform = CGAffineTransformMakeTranslation(0, self.bvc.toolbar.frame.height)
             // Reset the insets so that clicking works on the edges of the screen
-            if let tab = self.tabManager.selectedTab {
+            if let tab = self.bvc.tabManager.selectedTab {
                 tab.webView.scrollView.contentInset = UIEdgeInsets(top: AppConstants.StatusBarHeight, left: 0, bottom: 0, right: 0)
                 tab.webView.scrollView.scrollIndicatorInsets = UIEdgeInsets(top: AppConstants.StatusBarHeight, left: 0, bottom: 0, right: 0)
             }
-            self.setNeedsStatusBarAppearanceUpdate()
+            self.bvc.setNeedsStatusBarAppearanceUpdate()
         }, completion: completion)
     }
 
@@ -645,14 +694,14 @@ extension BrowserViewController: UIScrollViewDelegate {
             self.scrollUrlBar(CGFloat(MAXFLOAT))
             self.scrollToolbar(CGFloat(MAXFLOAT))
 
-            self.header.transform = CGAffineTransformIdentity
-            self.footer.transform = CGAffineTransformIdentity
+            self.bvc.header.transform = CGAffineTransformIdentity
+            self.bvc.footer.transform = CGAffineTransformIdentity
             // Reset the insets so that clicking works on the edges of the screen
-            if let tab = self.tabManager.selectedTab {
-                tab.webView.scrollView.contentInset = UIEdgeInsets(top: self.header.frame.height + (self.readerModeBar.hidden ? 0 : self.readerModeBar.frame.height), left: 0, bottom: AppConstants.ToolbarHeight, right: 0)
-                tab.webView.scrollView.scrollIndicatorInsets = UIEdgeInsets(top: self.header.frame.height + (self.readerModeBar.hidden ? 0 : self.readerModeBar.frame.height), left: 0, bottom: AppConstants.ToolbarHeight, right: 0)
+            if let tab = self.bvc.tabManager.selectedTab {
+                tab.webView.scrollView.contentInset = UIEdgeInsets(top: self.bvc.header.frame.height + (self.bvc.readerModeBar.hidden ? 0 : self.bvc.readerModeBar.frame.height), left: 0, bottom: AppConstants.ToolbarHeight, right: 0)
+                tab.webView.scrollView.scrollIndicatorInsets = UIEdgeInsets(top: self.bvc.header.frame.height + (self.bvc.readerModeBar.hidden ? 0 : self.bvc.readerModeBar.frame.height), left: 0, bottom: AppConstants.ToolbarHeight, right: 0)
             }
-            self.setNeedsStatusBarAppearanceUpdate()
+            self.bvc.setNeedsStatusBarAppearanceUpdate()
         }, completion: completion)
     }
 }
@@ -684,7 +733,7 @@ extension BrowserViewController: TabManagerDelegate {
                 showBar(bar, animated: true)
             }
         }
-        showToolbars(animated: false)
+        // showToolbars(animated: false)
 
         toolbar.updateBackStatus(selected?.canGoBack ?? false)
         toolbar.updateFowardStatus(selected?.canGoForward ?? false)
@@ -725,6 +774,7 @@ extension BrowserViewController: TabManagerDelegate {
 
     func tabManager(tabManager: TabManager, didAddTab tab: Browser) {
         urlBar.updateTabCount(tabManager.count)
+        tab.webView.scrollView.addGestureRecognizer(gestureRecognizer)
 
         webViewContainer.insertSubview(tab.webView, atIndex: 0)
         tab.webView.scrollView.contentInset = UIEdgeInsetsMake(AppConstants.ToolbarHeight + AppConstants.StatusBarHeight, 0, AppConstants.ToolbarHeight, 0)
@@ -824,7 +874,7 @@ extension BrowserViewController: WKNavigationDelegate {
                 urlBar.updateURL(tab.displayURL);
                 toolbar.updateBackStatus(webView.canGoBack)
                 toolbar.updateFowardStatus(webView.canGoForward)
-                showToolbars(animated: false)
+                // showToolbars(animated: false)
 
                 if let url = tab.displayURL?.absoluteString {
                     profile.bookmarks.isBookmarked(url, success: { bookmarked in
@@ -983,6 +1033,7 @@ extension BrowserViewController: ReaderModeStyleViewControllerDelegate {
 
 extension BrowserViewController: LongPressGestureDelegate {
     func longPressRecognizer(longPressRecognizer: LongPressGestureRecognizer, didLongPressElements elements: [LongPressElementType: NSURL]) {
+        println("LongPress")
         var actionSheetController = UIAlertController(title: nil, message: nil, preferredStyle: UIAlertControllerStyle.ActionSheet)
         var dialogTitleURL: NSURL?
         if let linkURL = elements[LongPressElementType.Link] {

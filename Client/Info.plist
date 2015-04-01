@@ -55,7 +55,11 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
+<<<<<<< HEAD
 	<true/>
+=======
+	<false/>
+>>>>>>> 6f13f20... Make it work
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
