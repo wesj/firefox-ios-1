@@ -105,8 +105,8 @@ class TestHistory : ProfileTest {
         }
     }
 
-    let NumThreads = 5
-    let NumCmds = 10
+    let NumThreads = 10
+    let NumCmds = 1000
 
     func testInsertPerformance() {
         withTestProfile { profile -> Void in
@@ -163,7 +163,7 @@ class TestHistory : ProfileTest {
                     }
                 })
             }
-            self.waitForExpectationsWithTimeout(10, handler: nil)
+            self.waitForExpectationsWithTimeout(100, handler: nil)
         }
     }
 
@@ -183,7 +183,7 @@ class TestHistory : ProfileTest {
                     }
                 })
             }
-            self.waitForExpectationsWithTimeout(10, handler: nil)
+            self.waitForExpectationsWithTimeout(100, handler: nil)
         }
     }
 
@@ -199,14 +199,18 @@ class TestHistory : ProfileTest {
         case 0...1:
             let url = "url \(rand() % 100)"
             let title = "title \(rand() % 100)"
-            innerAddSite(history, url: url, title: title) { success in cb() }
+            innerAddSite(history, url: url, title: title) { success in
+                XCTAssert(success, "Insert succeeded")
+                cb()
+            }
         case 2...3:
             innerCheckSites(history) { cursor in
                 for site in cursor {
                     let s = site as! Site
+                    XCTAssertNotNil(s, "Read succeeded")
                 }
+                cb()
             }
-            cb()
         default:
             innerClear(history) { success in cb() }
         }

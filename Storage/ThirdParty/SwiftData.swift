@@ -285,24 +285,16 @@ func StringFactory(row: SDRow) -> String {
 // Wrapper around a statment for getting data from a row. This provides accessors for subscript indexing
 // and a generator for iterating over columns.
 public class SDRow : SequenceType {
-    // The sqlite statement this row came from.
-    private let stmt: COpaquePointer
+    private var data = [String: AnyObject]()
 
-    // The columns of this database. The indices of these are assumed to match the indices
-    // of the statement.
-    private let columnNames: [String]
-
-    // We hold a reference to the connection to keep it from being closed.
-    private let db: SQLiteDBConnection
-
-    private init(connection: SQLiteDBConnection, stmt: COpaquePointer, columns: [String]) {
-        db = connection
-        self.stmt = stmt
-        self.columnNames = columns
+    private init(stmt: COpaquePointer, columns: [String]) {
+        for (idx, column) in enumerate(columns) {
+            data[column] = getValue(stmt, index: idx)
+        }
     }
 
     // Return the value at this index in the row
-    private func getValue(index: Int) -> AnyObject? {
+    private func getValue(stmt: COpaquePointer, index: Int) -> AnyObject? {
         let i = Int32(index)
 
         let type = sqlite3_column_type(stmt, i)
@@ -331,17 +323,14 @@ public class SDRow : SequenceType {
 
     // Accessor getting column 'key' in the row
     public subscript(key: Int) -> AnyObject? {
-        return getValue(key)
+        return data.values.array[key]
     }
 
     // Accessor getting a named column in the row. This (currently) depends on
     // the columns array passed into this Row to find the correct index.
     public subscript(key: String) -> AnyObject? {
         get {
-            if let index = find(columnNames, key) {
-                return getValue(index)
-            }
-            return nil
+            return data[key]
         }
     }
 
@@ -349,11 +338,9 @@ public class SDRow : SequenceType {
     public func generate() -> GeneratorOf<Any> {
         var nextIndex = 0
         return GeneratorOf<Any>() {
-            // This crashes the compiler. Yay!
-            if (nextIndex < self.columnNames.count) {
-                return nil // self.getValue(nextIndex)
-            }
-            return nil
+            let val = self[nextIndex]
+            nextIndex++
+            return val
         }
     }
 }
@@ -473,121 +460,35 @@ private struct SDError {
 // Wrapper around a statement to help with iterating through the results. This currently
 // only fetches items when asked for, and caches (all) old requests. Ideally it will
 // at somepoint fetch a window of items to keep in memory
-public class SDCursor<T> : Cursor {
-    private let stmt: COpaquePointer
+public class SDCursor<T> : ArrayCursor<T> {
     // Function for generating objects of type T from a row.
     private let factory: (SDRow) -> T
-    // Status of the previous fetch request.
-    private var sqlStatus: Int32 = 0
-    // Hold a reference to the connection so that it isn't closed
-    private let db: SQLiteDBConnection
-    // Cache of perviously fetched results (and their row numbers)
-    var cache = [Int: T]()
-    // Number of rows in the database
-    // XXX - When Cursor becomes an interface, this should be a normal property, but right now
-    //       we can't override the Cursor getter for count with a stored property.
-    private let _count: Int
-    override public var count: Int {
-        get {
-            if status != .Success {
-                return 0
-            }
-            return _count
-        }
-    }
-
-    private var _position = -1
-    private var position: Int {
-        get {
-            return _position
-        }
-        set {
-            // If we're already there, shortcut out.
-            if (newValue == _position) {
-                return
-            }
-
-            // If we're currently somewhere in the list after this position
-            // we'll have to jump back to the start.
-            if (newValue < _position) {
-                sqlite3_reset(self.stmt)
-                _position = -1
-            }
-
-            // Now step up through the list to the requested position
-            while (newValue != _position) {
-                sqlStatus = sqlite3_step(self.stmt)
-                _position++
-            }
-        }
-    }
 
     private init(db: SQLiteDBConnection, stmt: COpaquePointer, factory: (SDRow) -> T) {
         // We will hold the db open until we're thrown away
-        self.db = db
-        self.stmt = stmt
         self.factory = factory
 
-        // The only way I know to get a count. Walk through the entire statement to see how many rows there are.
-        var count = 0
-        self.sqlStatus = sqlite3_step(self.stmt)
-        while self.sqlStatus != SQLITE_DONE {
-            count++
-            self.sqlStatus = sqlite3_step(self.stmt)
-        }
-
-        sqlite3_reset(self.stmt)
-        self._count = count
-
-        super.init(status: .Success, msg: "success")
-    }
-
-    // Helper for finding all the column names in this statement.
-    lazy var columns: [String] = {
         // This untangles all of the columns and values for this row when its created
-        let columnCount = sqlite3_column_count(self.stmt)
+        let columnCount = sqlite3_column_count(stmt)
         var columns = [String]()
         for var i: Int32 = 0; i < columnCount; ++i {
-            let columnName = String.fromCString(sqlite3_column_name(self.stmt, i))!
+            let columnName = String.fromCString(sqlite3_column_name(stmt, i))!
             columns.append(columnName)
         }
-        return columns
-    }()
 
-    // Finalize the statement when we're destroyed. This will also release our reference
-    // to the database, which will hopefully close it as well.
-    deinit {
-        if status == .Success {
-            sqlite3_finalize(self.stmt)
+        // The only way I know to get a count. Walk through the entire statement to see how many rows there are.
+        var sqlStatus = sqlite3_step(stmt)
+        var cache = [T]()
+        while sqlStatus != SQLITE_DONE {
+            if sqlStatus == SQLITE_ROW {
+                let row = SDRow(stmt: stmt, columns: columns)
+                let res = self.factory(row)
+                cache.append(res)
+            }
+            sqlStatus = sqlite3_step(stmt)
         }
-    }
+        sqlite3_finalize(stmt)
 
-    override public subscript(index: Int) -> Any? {
-        get {
-            if status != .Success {
-                return nil
-            }
-
-            if let row = cache[index] {
-                return row
-            }
-
-            self.position = index
-            if self.sqlStatus != SQLITE_ROW {
-                return nil
-            }
-
-            let row = SDRow(connection: db, stmt: self.stmt, columns: self.columns)
-            let res = self.factory(row)
-            self.cache[index] = res
-
-            return res
-        }
-    }
-
-    override public func close() {
-        sqlite3_finalize(self.stmt)
-        cache.removeAll(keepCapacity: false)
-        super.close()
+        super.init(data: cache, status: .Success, statusMessage: "Success")
     }
 }

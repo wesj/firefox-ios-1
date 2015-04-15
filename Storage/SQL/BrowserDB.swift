@@ -128,7 +128,6 @@ class BrowserDB {
             if !success {
                 println("Couldn't create or update \(table.name)")
                 success = self.files.move(self.FileName, toRelativePath: "\(self.FileName).bak")
-                assert(success)
                 success = self.createTable(connection, table: table)
             }
             return success

@@ -45,6 +45,7 @@ class HistoryPanel: SiteTableViewController, HomePanel {
                 } else {
                     cell.imageView?.image = self.profile.favicons.defaultIcon
                 }
+                cell.accessibilityLabel = site.title
             }
         }
 

@@ -357,7 +357,7 @@ class TabTrayController: UIViewController, UITabBarDelegate, UICollectionViewDel
         signInButton.hidden = true //hiding sign in button until we decide on UX
 
         navItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(named: "add"), style: .Plain, target: self, action: "SELdidClickAddTab")
-
+        navItem.rightBarButtonItem?.accessibilityLabel = NSLocalizedString("Add tab", comment: "Accessibility label for the add tab button in the Tab Tray.")
 
         navBar.pushNavigationItem(navItem, animated: false)
 
@@ -432,6 +432,7 @@ class TabTrayController: UIViewController, UITabBarDelegate, UICollectionViewDel
         let screenshotAspectRatio = cell.frame.width / TabTrayControllerUX.CellHeight
         cell.background.image = screenshotHelper.takeScreenshot(tab, aspectRatio: screenshotAspectRatio, quality: 1)
         cell.closeTab.addTarget(cell, action: "SELdidPressClose", forControlEvents: UIControlEvents.TouchUpInside)
+        cell.accessibilityLabel = tab.displayTitle
 
         // calling setupFrames here fixes reused cells which don't get resized on rotation
         // TODO: is there a better way?
