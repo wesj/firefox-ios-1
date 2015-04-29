@@ -14,38 +14,9 @@ protocol TabManagerDelegate: class {
     func tabManager(tabManager: TabManager, didRemoveTab tab: Browser, atIndex index: Int)
 }
 
-// We can't use a WeakList here because this is a protocol.
-struct WeakTabManagerDelegate {
-    var value : TabManagerDelegate?
-
-    init (value: TabManagerDelegate) {
-        self.value = value
-    }
-
-    func get() -> TabManagerDelegate? {
-        return value
-    }
-}
-
 // TabManager must extend NSObjectProtocol in order to implement WKNavigationDelegate
 class TabManager : NSObject {
-    private var delegates = [WeakTabManagerDelegate]()
-
-    func addDelegate(delegate: TabManagerDelegate) {
-        assert(NSThread.isMainThread())
-        delegates.append(WeakTabManagerDelegate(value: delegate))
-    }
-
-    func removeDelegate(delegate: TabManagerDelegate) {
-        assert(NSThread.isMainThread())
-        for var i = 0; i < delegates.count; i++ {
-            var del = delegates[i]
-            if delegate === del.get() {
-                delegates.removeAtIndex(i)
-                return
-            }
-        }
-    }
+    private var delegates = [TabManagerDelegate]()
 
     private var tabs: [Browser] = []
     private var _selectedIndex = -1
@@ -124,7 +95,7 @@ class TabManager : NSObject {
         assert(tab === selectedTab, "Expected tab is selected")
 
         for delegate in delegates {
-            delegate.get()?.tabManager(self, didSelectedTabChange: tab, previous: previous)
+            delegate.tabManager(self, didSelectedTabChange: tab, previous: previous)
         }
     }
 
@@ -156,11 +127,11 @@ class TabManager : NSObject {
 
     private func addTab(tab: Browser) {
         for delegate in delegates {
-            delegate.get()?.tabManager(self, didCreateTab: tab)
+            delegate.tabManager(self, didCreateTab: tab)
         }
         tabs.append(tab)
         for delegate in delegates {
-            delegate.get()?.tabManager(self, didAddTab: tab, atIndex: tabs.count-1)
+            delegate.tabManager(self, didAddTab: tab, atIndex: tabs.count-1)
         }
     }
 
@@ -196,7 +167,7 @@ class TabManager : NSObject {
         assert(count == prevCount - 1, "Tab removed")
 
         for delegate in delegates {
-            delegate.get()?.tabManager(self, didRemoveTab: tab, atIndex: index)
+            delegate.tabManager(self, didRemoveTab: tab, atIndex: index)
         }
 
         if flushToDisk {
@@ -227,6 +198,23 @@ class TabManager : NSObject {
     private func storeChanges() {
         let storedTabs: [RemoteTab] = tabs.map(Browser.toTab)
         storage?.insertOrUpdateTabs(storedTabs)
+    }
+
+    func addDelegate(delegate: TabManagerDelegate) {
+        assert(NSThread.isMainThread())
+        delegates.append(delegate)
+    }
+
+    func removeDelegate(delegate: TabManagerDelegate) {
+        assert(NSThread.isMainThread())
+        for (index, del) in enumerate(delegates) {
+            if del === delegate {
+                delegates.removeAtIndex(index)
+                return
+            }
+        }
+        assert(true, "Removing an unregistered delegate")
+        println("Could not find delegate");
     }
 }
 

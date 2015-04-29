@@ -350,7 +350,6 @@ class TabTrayController: UIViewController, UITabBarDelegate, UICollectionViewDel
 
     override func viewDidLoad() {
         view.accessibilityLabel = NSLocalizedString("Tabs Tray", comment: "Accessibility label for the Tabs Tray view.")
-        tabManager.addDelegate(self)
 
         navBar = UINavigationBar()
 
@@ -421,6 +420,16 @@ class TabTrayController: UIViewController, UITabBarDelegate, UICollectionViewDel
             make.top.equalTo(self.view)
             make.left.right.bottom.equalTo(self.view)
         }
+    }
+
+    override func viewWillAppear(animated: Bool) {
+        tabManager.addDelegate(self)
+        super.viewWillAppear(animated);
+    }
+
+    override func viewWillDisappear(animated: Bool) {
+        tabManager.removeDelegate(self)
+        super.viewWillDisappear(animated);
     }
 
     private func numberOfColumnsForCurrentSize() -> Int {

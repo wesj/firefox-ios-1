@@ -58,6 +58,10 @@ class BrowserViewController: UIViewController {
         tabManager.addNavigationDelegate(self)
     }
 
+    deinit {
+        tabManager.removeDelegate(self)
+    }
+
     override func preferredStatusBarStyle() -> UIStatusBarStyle {
         if header == nil {
             return UIStatusBarStyle.LightContent
