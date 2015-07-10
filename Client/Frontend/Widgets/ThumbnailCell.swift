@@ -7,17 +7,20 @@ import Shared
 
 struct ThumbnailCellUX {
     /// Ratio of width:height of the thumbnail image.
-    static let ImageAspectRatio: Float = 1.5
+    static let ImageAspectRatio: Float = 1.0
     static let TextSize = UIConstants.DefaultSmallFontSize
-    static let BorderColor = UIColor.blackColor().colorWithAlphaComponent(0.2)
+    static let BorderColor = UIColor.blackColor().colorWithAlphaComponent(0.1)
     static let BorderWidth: CGFloat = 1
-    static let LabelFont = UIConstants.DefaultSmallFont
-    static let LabelColor = UIAccessibilityDarkerSystemColorsEnabled() ? UIColor.blackColor() : UIColor.darkGrayColor()
+    static let LabelFont = UIFont.systemFontOfSize(10, weight: UIFontWeightMedium)
+    static let LabelColor = UIAccessibilityDarkerSystemColorsEnabled() ? UIColor.blackColor() : UIColor(rgb: 0x353535)
     static let LabelBackgroundColor = UIColor(white: 1.0, alpha: 0.5)
-    static let InsetSize: CGFloat = 8
-    static let Insets = UIEdgeInsetsMake(InsetSize, InsetSize, InsetSize, InsetSize)
-    static let TextOffset = 2
-    static let PlaceholderImage = UIImage(named: "defaultFavicon")
+    static let LabelAlignment: NSTextAlignment = .Center
+    static let InsetSize: CGFloat = 20
+    static let InsetSizeCompact: CGFloat = 6
+    static let ImagePadding: CGFloat = 20
+    static let ImagePaddingCompact: CGFloat = 10
+    static let LabelInsets = UIEdgeInsetsMake(10, 3, 10, 3)
+    static let PlaceholderImage = UIImage(named: "defaultTopSiteIcon")
     static let CornerRadius: CGFloat = 3
 
     // Make the remove button look 20x20 in size but have the clickable area be 44x44
@@ -39,6 +42,11 @@ class ThumbnailCell: UICollectionViewCell {
         return UILongPressGestureRecognizer(target: self, action: "SELdidLongPress")
     }()
 
+    class func Insets() -> UIEdgeInsets {
+        let inset: CGFloat = (UIScreen.mainScreen().traitCollection.horizontalSizeClass == .Compact) ? ThumbnailCellUX.InsetSizeCompact : ThumbnailCellUX.InsetSize
+        return UIEdgeInsetsMake(inset, inset, inset, inset)
+    }
+
     lazy var textWrapper: UIView = {
         let wrapper = UIView()
         wrapper.backgroundColor = ThumbnailCellUX.LabelBackgroundColor
@@ -50,18 +58,13 @@ class ThumbnailCell: UICollectionViewCell {
         textLabel.setContentHuggingPriority(1000, forAxis: UILayoutConstraintAxis.Vertical)
         textLabel.font = ThumbnailCellUX.LabelFont
         textLabel.textColor = ThumbnailCellUX.LabelColor
+        textLabel.textAlignment = ThumbnailCellUX.LabelAlignment
         return textLabel
     }()
 
     lazy var imageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = UIViewContentMode.ScaleAspectFit
-
-        // Force nearest neighbor scaling
-        imageView.layer.shouldRasterize = true
-        imageView.layer.rasterizationScale = 2
-        imageView.layer.minificationFilter = kCAFilterNearest
-        imageView.layer.magnificationFilter = kCAFilterNearest
 
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = ThumbnailCellUX.CornerRadius
@@ -114,7 +117,7 @@ class ThumbnailCell: UICollectionViewCell {
         contentView.addSubview(removeButton)
 
         imageWrapper.snp_remakeConstraints({ make in
-            make.top.bottom.left.right.equalTo(self.contentView).insets(ThumbnailCellUX.Insets)
+            make.top.bottom.left.right.equalTo(self.contentView).insets(ThumbnailCell.Insets())
         })
 
         backgroundImage.snp_remakeConstraints({ make in
@@ -126,18 +129,19 @@ class ThumbnailCell: UICollectionViewCell {
         })
 
         imageView.snp_remakeConstraints({ make in
-            make.top.left.right.equalTo(self.imageWrapper)
-            make.bottom.equalTo(self.textWrapper.snp_top)
+            let imagePadding: CGFloat = (UIScreen.mainScreen().traitCollection.horizontalSizeClass == .Compact) ? ThumbnailCellUX.ImagePaddingCompact : ThumbnailCellUX.ImagePadding
+            let insets = UIEdgeInsetsMake(imagePadding, imagePadding, imagePadding, imagePadding)
+            make.top.left.right.equalTo(self.imageWrapper).insets(insets)
+            make.bottom.equalTo(textWrapper.snp_top).offset(-imagePadding) // .insets(insets)
         })
 
         textWrapper.snp_remakeConstraints({ make in
             make.bottom.equalTo(self.imageWrapper.snp_bottom) // .offset(ThumbnailCellUX.BorderWidth)
             make.left.right.equalTo(self.imageWrapper) // .offset(ThumbnailCellUX.BorderWidth)
-            make.height.equalTo(ThumbnailCellUX.TextSize + ThumbnailCellUX.InsetSize * 2)
         })
 
         textLabel.snp_remakeConstraints({ make in
-            make.edges.equalTo(self.textWrapper).insets(ThumbnailCellUX.Insets)
+            make.edges.equalTo(self.textWrapper).insets(ThumbnailCellUX.LabelInsets)
             return
         })
     }
@@ -151,8 +155,9 @@ class ThumbnailCell: UICollectionViewCell {
 
         // TODO: We can avoid creating this button at all if we're not in editing mode.
         var frame = removeButton.frame
+        let insets = ThumbnailCell.Insets()
         frame.size = CGSize(width: ThumbnailCellUX.RemoveButtonSize, height: ThumbnailCellUX.RemoveButtonSize)
-        frame.center = CGPoint(x: ThumbnailCellUX.InsetSize, y: ThumbnailCellUX.InsetSize)
+        frame.center = CGPoint(x: insets.left, y: insets.top)
         removeButton.frame = frame
     }
 
@@ -204,7 +209,16 @@ class ThumbnailCell: UICollectionViewCell {
         didSet {
             if let image = image {
                 imageView.image = image
-                imageView.contentMode = UIViewContentMode.ScaleAspectFill
+                imageView.contentMode = UIViewContentMode.ScaleAspectFit
+
+                // Force nearest neighbor scaling for small favicons
+                if image.size.width < 24 {
+                    imageView.layer.shouldRasterize = true
+                    imageView.layer.rasterizationScale = 2
+                    imageView.layer.minificationFilter = kCAFilterNearest
+                    imageView.layer.magnificationFilter = kCAFilterNearest
+                }
+
             } else {
                 imageView.image = ThumbnailCellUX.PlaceholderImage
                 imageView.contentMode = UIViewContentMode.Center
