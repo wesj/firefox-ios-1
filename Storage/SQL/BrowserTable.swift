@@ -16,6 +16,7 @@ let TableVisits = "visits"
 let TableFaviconSites = "favicon_sites"
 let TableQueuedTabs = "queue"
 
+let ViewFaviconsForSites = "view_favicons"
 let ViewWidestFaviconsForSites = "view_favicons_widest"
 let ViewHistoryIDsWithWidestFavicons = "view_history_id_favicon"
 let ViewIconForURL = "view_icon_for_url"
@@ -99,17 +100,23 @@ public class BrowserTable: Table {
         "UNIQUE (siteID, faviconID) " +
     ") "
 
-    let CreateWidestFaviconsView =
-    "CREATE VIEW IF NOT EXISTS \(ViewWidestFaviconsForSites) AS " +
+    let CreateFaviconsView =
+    "CREATE VIEW IF NOT EXISTS \(ViewFaviconsForSites) AS " +
         "SELECT " +
         "\(TableFaviconSites).siteID AS siteID, " +
         "\(TableFavicons).id AS iconID, " +
         "\(TableFavicons).url AS iconURL, " +
         "\(TableFaviconSites).date AS iconDate, " +
         "\(TableFavicons).type AS iconType, " +
-        "MAX(\(TableFavicons).width) AS iconWidth " +
+        "\(TableFavicons).width AS iconWidth " +
         "FROM \(TableFaviconSites), \(TableFavicons) WHERE " +
-        "\(TableFaviconSites).faviconID = \(TableFavicons).id " +
+    "\(TableFaviconSites).faviconID = \(TableFavicons).id"
+
+    let CreateWidestFaviconsView =
+    "CREATE VIEW IF NOT EXISTS \(ViewWidestFaviconsForSites) AS " +
+        "SELECT siteID, iconID, iconURL, iconDate, iconType, " +
+        "MAX(iconWidth) AS iconWidth " +
+        "FROM \(ViewFaviconsForSites)" +
     "GROUP BY siteID "
 
     let CreateHistoryIdWithIconView =
@@ -216,6 +223,7 @@ public class BrowserTable: Table {
             CreateFaviconSitesTable,
             CreateShouldUploadIndex,
             CreateSiteIDDateIndex,
+            CreateFaviconsView,
             CreateWidestFaviconsView,
             CreateHistoryIdWithIconView,
             CreateIconForURLView,
@@ -281,6 +289,16 @@ public class BrowserTable: Table {
                 CreateIconForURLView,
                 CreateHistoryIdWithIconView,
                 "PRAGMA foreign_keys=ON",
+            ]) {
+                return false
+            }
+        }
+
+        if (from < 7) {
+            if !self.run(db, queries: [
+                CreateFaviconsView,
+                "DROP VIEW \(ViewWidestFaviconsForSites)",
+                CreateWidestFaviconsView
             ]) {
                 return false
             }

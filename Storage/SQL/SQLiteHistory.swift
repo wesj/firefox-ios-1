@@ -225,10 +225,11 @@ extension SQLiteHistory: BrowserHistory {
     private class func iconColumnFactory(row: SDRow) -> Favicon? {
         if let iconType = row["iconType"] as? Int,
            let iconURL = row["iconURL"] as? String,
-           let iconDate = row.getTimestamp("iconDate"),
            let iconID = row["iconID"] as? Int {
                 let icon = Favicon(url: iconURL, type: IconType(rawValue: iconType)!)
-                icon._date = NSDate.fromTimestamp(iconDate)
+                if let iconDate = row.getTimestamp("iconDate") {
+                    icon._date = NSDate.fromTimestamp(iconDate)
+                }
                 return icon
         }
         return nil
@@ -385,6 +386,18 @@ extension SQLiteHistory: Favicons {
         // The worst.
         let args: Args? = [site.url, icon.url, NSDate.nowNumber()]
         return doChange("\(insertOrIgnore) (\(siteSubselect), \(iconSubselect), ?)", args)
+    }
+
+    public func getFaviconsForSite(site: Site) -> Deferred<Result<[Favicon?]>> {
+        let sql = "SELECT iconID, iconURL, iconDate, iconType, iconWidth " +
+            "FROM \(ViewFaviconsForSites), \(TableHistory) WHERE " +
+            "url = ? AND \(ViewFaviconsForSites).siteID = \(TableHistory).id"
+        return db.runQuery(sql, args: [site.url], factory: SQLiteHistory.iconColumnFactory) >>== { cursor in
+            if cursor.count == 0 {
+                return deferResult(NoSuchRecordError(guid: site.url))
+            }
+            return deferResult(cursor.asArray())
+        }
     }
 }
 
