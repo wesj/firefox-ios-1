@@ -226,12 +226,14 @@ extension SQLiteHistory: BrowserHistory {
         if let iconType = row["iconType"] as? Int,
            let iconURL = row["iconURL"] as? String,
            let iconID = row["iconID"] as? Int {
+            println("Building icon \(iconURL)")
                 let icon = Favicon(url: iconURL, type: IconType(rawValue: iconType)!)
                 if let iconDate = row.getTimestamp("iconDate") {
                     icon._date = NSDate.fromTimestamp(iconDate)
                 }
                 return icon
         }
+        println("Can't build icon")
         return nil
     }
 
@@ -283,12 +285,18 @@ extension SQLiteHistory: BrowserHistory {
 
 extension SQLiteHistory: Favicons {
     // These two getter functions are only exposed for testing purposes (and aren't part of the public interface).
-    func getFaviconsForURL(url: String) -> Deferred<Result<Cursor<Favicon?>>> {
-        let sql = "SELECT iconID AS id, iconURL AS url, iconDate AS date, iconType AS type, iconWidth AS width FROM " +
-            "\(ViewWidestFaviconsForSites), \(TableHistory) WHERE " +
+    public func getFaviconsForSite(site: Site) -> Deferred<Result<Cursor<Favicon?>>> {
+        let sql = "SELECT iconID, iconURL, iconDate, iconType, iconWidth FROM " +
+            "\(ViewFaviconsForSites), \(TableHistory) WHERE " +
             "\(TableHistory).id = siteID AND \(TableHistory).url = ?"
-        let args: Args = [url]
+        let args: Args = [site.url]
         return db.runQuery(sql, args: args, factory: SQLiteHistory.iconColumnFactory)
+    }
+
+    public func removeIcons(icons: [Favicon]) -> Success {
+        let ids: Args = icons.map { return $0.id }
+        let binds = ",".join(icons.map { _ -> String in return "?" })
+        return db.run("REMOVE FROM \(TableFavicons) WHERE id IN \(binds)", withArgs: ids)
     }
 
     func getFaviconsForBookmarkedURL(url: String) -> Deferred<Result<Cursor<Favicon?>>> {
@@ -335,7 +343,7 @@ extension SQLiteHistory: Favicons {
         }
         func doChange(query: String, args: Args?) -> Deferred<Result<Int>> {
             var err: NSError?
-            let res = db.withWritableConnection(&err) { (conn, inout err: NSError?) -> Int in
+            icon.id = db.withWritableConnection(&err) { (conn, inout err: NSError?) -> Int in
                 // Blind! We don't see failure here.
                 let id = self.favicons.insertOrUpdate(conn, obj: icon)
 
@@ -355,7 +363,7 @@ extension SQLiteHistory: Favicons {
                 return id ?? 0
             }
 
-            if res == 0 {
+            if icon.id == 0 {
                 return deferResult(DatabaseError(err: err))
             }
             return deferResult(icon.id!)
@@ -386,18 +394,6 @@ extension SQLiteHistory: Favicons {
         // The worst.
         let args: Args? = [site.url, icon.url, NSDate.nowNumber()]
         return doChange("\(insertOrIgnore) (\(siteSubselect), \(iconSubselect), ?)", args)
-    }
-
-    public func getFaviconsForSite(site: Site) -> Deferred<Result<[Favicon?]>> {
-        let sql = "SELECT iconID, iconURL, iconDate, iconType, iconWidth " +
-            "FROM \(ViewFaviconsForSites), \(TableHistory) WHERE " +
-            "url = ? AND \(ViewFaviconsForSites).siteID = \(TableHistory).id"
-        return db.runQuery(sql, args: [site.url], factory: SQLiteHistory.iconColumnFactory) >>== { cursor in
-            if cursor.count == 0 {
-                return deferResult(NoSuchRecordError(guid: site.url))
-            }
-            return deferResult(cursor.asArray())
-        }
     }
 }
 

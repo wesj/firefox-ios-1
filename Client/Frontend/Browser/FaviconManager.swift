@@ -54,22 +54,23 @@ class FaviconManager : BrowserHelper {
         if let url = browser?.webView!.URL?.absoluteString {
             let site = Site(url: url, title: "")
             profile.favicons.getFaviconsForSite(site) >>== { storedIcons in
+                var storedIconsArray = storedIcons.asArray().filter { return $0 != nil } as! [Favicon]
+
                 if let icons = message.body as? [String: Int] {
                     for icon in icons {
-                        if let iconUrl = NSURL(string: icon.0) {
-                            let icon = Favicon(iconUrl, type: IconType(rawValue: icon.1)!)
-                            self.browser?.favicons.append(icon)
-                            if let index = find(storedIcons, icon) {
-                                storedIcons.removeAtIndex(index)
-                                return Deferred(Result(icon))
-                            } else {
-                                return downloadIcon(icon)
+                        let favicon = Favicon(url: icon.0, type: IconType(rawValue: icon.1)!)
+                        self.browser?.favicons.append(favicon)
+                        if let index = find(storedIconsArray, favicon) {
+                            storedIconsArray.removeAtIndex(index)
+                        } else {
+                            self.downloadIcon(favicon) >>== { icon in
+                                self.profile.favicons.addFavicon(icon, forSite: site)
                             }
                         }
                     }
                 }
 
-                profile.favicons.removeIcons(storedIcons)
+                self.profile.favicons.removeIcons(storedIconsArray)
             }
         }
     }

@@ -17,7 +17,7 @@ public enum IconType: Int {
     case Local = 4
 }
 
-public class Favicon: Identifiable {
+public class Favicon: Identifiable, Equatable {
     var id: Int? = nil
     var img: UIImage? = nil
 
@@ -33,6 +33,10 @@ public class Favicon: Identifiable {
         self.url = url
         self.type = type
     }
+}
+
+public func ==(left: Favicon, right: Favicon) -> Bool {
+    return left.url == right.url
 }
 
 // TODO: Site shouldn't have all of these optional decorators. Include those in the

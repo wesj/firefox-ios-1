@@ -19,5 +19,7 @@ public protocol Favicons {
      */
     func addFavicon(icon: Favicon, forSite site: Site) -> Deferred<Result<Int>>
 
-    func getFaviconsForSite(site: Site) -> Deferred<Result<[Favicon]>>
+    func getFaviconsForSite(site: Site) -> Deferred<Result<Cursor<Favicon?>>>
+
+    func removeIcons(icons: [Favicon]) -> Success
 }
